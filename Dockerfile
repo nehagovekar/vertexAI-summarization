@@ -4,10 +4,11 @@ FROM python:3.9-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and upgrade pip
 RUN apt-get update && apt-get install -y \
     gcc \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --upgrade pip
 
 # Copy requirements first for better caching
 COPY requirements.txt .
@@ -26,7 +27,6 @@ EXPOSE 8000
 
 # Set environment variables (will be overridden by mounted .env)
 ENV PYTHONPATH=/app
-ENV GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/vertex-ai-key.json
 
 # Run the application
 CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
