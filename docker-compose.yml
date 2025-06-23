@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  vertex-ai-summarizer:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PROJECT_ID=${PROJECT_ID}
+      - LOCATION=${LOCATION}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/vertex-ai.json
+    volumes:
+      - ./secrets:/app/secrets:ro
+      - ./src:/app/src:ro
+    restart: unless-stopped

@@ -1,0 +1,53 @@
+# Files to ignore when building Docker image (like .gitignore for Docker)
+
+# Git files
+.git
+.gitignore
+
+# Python cache files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+.tox
+.coverage
+.cache
+.pytest_cache
+
+# Virtual environments (don't need these in Docker)
+venv/
+env/
+ENV/
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# Development files (don't need in production)
+dev/
+docs/
+*.md
+README.md
+
+# Data files (optional - if you have large datasets)
+data/
+
+# Log files
+*.log
+
+# Docker files themselves
+Dockerfile
+docker-compose.yml
+.dockerignore
