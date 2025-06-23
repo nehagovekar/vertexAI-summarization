@@ -78,3 +78,21 @@ logs/
 
 # pyenv
 .python-version
+
+# Create/update .gitignore
+echo "
+# Secrets
+secrets/
+*.json
+.env
+github-actions-key.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Docker
+.dockerignore
+" >> .gitignore
