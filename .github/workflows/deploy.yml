@@ -40,8 +40,8 @@ jobs:
 
     - name: Print Success Message
       run: |
-        echo "✅ Docker image pushed successfully!"
-        echo "🚀 Image available at: gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
-        echo "📝 To deploy manually, SSH to VM and run:"
-        echo "   docker pull gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
-        echo "   docker run -d -p 8000:8000 --name vertex-ai-api gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
+        echo " Docker image pushed successfully!"
+        echo " Image available at: gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
+        echo " To deploy manually, SSH to VM and run:"
+        echo "  docker pull gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
+        echo "  docker run -d -p 8000:8000 --name vertex-ai-api gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
