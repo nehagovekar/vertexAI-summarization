@@ -1,4 +1,4 @@
-name: Build and Deploy to GCP
+name: Build and Push Docker Image
 
 on:
   push:
@@ -8,8 +8,8 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT }}
 
 jobs:
-  deploy:
-    name: Setup, Build, Publish, and Deploy
+  build-and-push:
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
     
     steps:
@@ -30,31 +30,18 @@ jobs:
 
     - name: Build Docker Image
       run: |
-        docker build -t gcr.io/$PROJECT_ID/vertex-ai-summarizer:$GITHUB_SHA .
+        docker build -t gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest .
+        docker tag gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest gcr.io/$PROJECT_ID/vertex-ai-summarizer:$GITHUB_SHA
 
-    - name: Publish Docker Image  
+    - name: Push Docker Image  
       run: |
+        docker push gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest
         docker push gcr.io/$PROJECT_ID/vertex-ai-summarizer:$GITHUB_SHA
 
-    - name: Configure VM Docker Authentication
+    - name: Print Success Message
       run: |
-        gcloud compute ssh vertex-ai-vm \
-          --zone=us-central1-a \
-          --command="gcloud auth configure-docker"
-
-    - name: Deploy to Compute Engine
-      run: |
-        gcloud compute ssh vertex-ai-vm \
-          --zone=us-central1-a \
-          --command="
-            docker pull gcr.io/$PROJECT_ID/vertex-ai-summarizer:$GITHUB_SHA &&
-            docker stop vertex-ai-api || true &&
-            docker rm vertex-ai-api || true &&
-            docker run -d \
-              --name vertex-ai-api \
-              -p 8000:8000 \
-              -v ~/secrets:/app/secrets:ro \
-              -v ~/.env:/app/.env:ro \
-              --restart unless-stopped \
-              gcr.io/$PROJECT_ID/vertex-ai-summarizer:$GITHUB_SHA
-          "
+        echo "✅ Docker image pushed successfully!"
+        echo "🚀 Image available at: gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
+        echo "📝 To deploy manually, SSH to VM and run:"
+        echo "   docker pull gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
+        echo "   docker run -d -p 8000:8000 --name vertex-ai-api gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
