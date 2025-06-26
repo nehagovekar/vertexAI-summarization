@@ -38,32 +38,14 @@ jobs:
         docker push gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest
         docker push gcr.io/$PROJECT_ID/vertex-ai-summarizer:$GITHUB_SHA
 
-    - name: Deploy to Cloud Run
-      env:
-        SERVICE_NAME: vertex-ai-summarizer
-        REGION: us-central1
-        IMAGE_NAME: gcr.io/${{ env.PROJECT_ID }}/vertex-ai-summarizer
-      run: |
-        echo "Deploying to Cloud Run..."
-
-        gcloud run deploy $SERVICE_NAME \
-          --image $IMAGE_NAME:${{ github.sha }} \
-          --allow-unauthenticated \
-          --port 8000 \
-          --service-account ${{ secrets.GCP_SA_EMAIL }} \
-          --cpu 1 \
-          --memory 1Gi \
-          --region $REGION \
-          --max-instances 2 \
-          --min-instances 0 \
-          --platform managed
-
-        echo "Deployment completed successfully!"
-
     - name: Print Success Message
       run: |
-        echo " Docker image pushed successfully!"
-        echo " Image available at: gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
-        echo " To deploy manually, SSH to VM and run:"
-        echo " docker pull gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
-        echo " docker run -d -p 8000:8000 --name vertex-ai-api gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
+        echo "✅ Docker image pushed successfully!"
+        echo "🚀 Image available at: gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
+        echo "📝 To deploy manually, SSH to VM and run:"
+        echo "   docker pull gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
+        echo "   docker run -d -p 8000:8000 --name vertex-ai-api gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest"
+git add .github/workflows/deploy.yml
+git commit -m "Simplify workflow - build and push only"
+git push origin main
+
