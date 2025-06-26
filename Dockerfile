@@ -19,14 +19,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy your source code
 COPY src/ ./src/
 
-# Create secrets directory (we'll mount the real secrets here)
-RUN mkdir -p /app/secrets
+# Set environment variables
+ENV PYTHONPATH=/app
 
 # Expose port
 EXPOSE 8000
 
-# Set environment variables (will be overridden by mounted .env)
-ENV PYTHONPATH=/app
-
-# Run the application
-CMD ["sh", "-c", "uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Run the application - CORRECTED PATH
+CMD ["sh", "-c", "uvicorn src.server.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
