@@ -67,11 +67,12 @@ jobs:
         SERVICE_NAME: vertex-ai-summarizer
         REGION: us-central1
       run: |
-        gcloud beta run services add-iam-policy-binding \
+        gcloud run services add-iam-policy-binding \
           --region=$REGION \
           --member=allUsers \
           --role=roles/run.invoker \
           $SERVICE_NAME
+
 
     - name: Print Success Message
       run: |
