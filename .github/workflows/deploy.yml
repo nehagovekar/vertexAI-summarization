@@ -56,7 +56,7 @@ jobs:
           --region $REGION \
           --max-instances 2 \
           --min-instances 0 \
-          --platform managed
+          --platform managed \
           --set-env-vars PROJECT_ID=${{ env.PROJECT_ID }},LOCATION=$REGION \
           --timeout 900
 
