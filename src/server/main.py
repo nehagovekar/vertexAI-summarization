@@ -4,25 +4,41 @@ from pydantic import BaseModel
 import os
 import sys
 from pathlib import Path
-from dotenv import load_dotenv
-from openai import OpenAI
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
 sys.path.append(str(project_root))
 
-# Load environment variables (only if .env exists)
-env_file = project_root / ".env"
-if env_file.exists():
-    load_dotenv(env_file)
+# Try to load environment variables safely
+try:
+    from dotenv import load_dotenv
+    env_file = project_root / ".env"
+    if env_file.exists():
+        load_dotenv(env_file)
+except ImportError:
+    print("Warning: dotenv not available, using environment variables directly")
 
-# Initialize OpenAI client
+# Try to import OpenAI safely
+try:
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    print("Warning: OpenAI library not available, using mock responses")
+    OPENAI_AVAILABLE = False
+    OpenAI = None
+
+# Initialize OpenAI client safely
 openai_api_key = os.getenv("OPENAI_API_KEY")
-if not openai_api_key:
-    print("Warning: OPENAI_API_KEY not found, using mock responses")
-    client = None
+if OPENAI_AVAILABLE and openai_api_key:
+    try:
+        client = OpenAI(api_key=openai_api_key)
+        print("✅ OpenAI client initialized successfully")
+    except Exception as e:
+        print(f"❌ OpenAI client initialization failed: {e}")
+        client = None
 else:
-    client = OpenAI(api_key=openai_api_key)
+    print("⚠️ OpenAI API key not found, using mock responses")
+    client = None
 
 app = FastAPI(title="AI Summarizer", version="1.0.0")
 
@@ -36,15 +52,15 @@ class SummarizeResponse(BaseModel):
     summary_source: str = "generated"
 
 def summarize_text(text: str, max_length: int = 150) -> str:
-    """Use OpenAI to summarize text"""
+    """Use OpenAI to summarize text with fallback to mock"""
     
-    # Fallback to mock if no API key
-    if not client:
-        return f"Mock summary: This text discusses various topics and contains {len(text)} characters. Key points would be extracted here in a real implementation."
+    # Use mock if OpenAI not available
+    if not client or not OPENAI_AVAILABLE:
+        return f"Mock summary: This text contains {len(text)} characters and discusses various topics. In a real implementation, AI would analyze the content and extract key points to create a meaningful summary of approximately {max_length} words."
     
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # Cheap and fast
+            model="gpt-3.5-turbo",
             messages=[
                 {
                     "role": "system", 
@@ -55,31 +71,42 @@ def summarize_text(text: str, max_length: int = 150) -> str:
                     "content": text
                 }
             ],
-            max_tokens=max_length * 2,  # Rough estimate
+            max_tokens=max_length * 2,
             temperature=0.3
         )
         
         return response.choices[0].message.content.strip()
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Summarization failed: {str(e)}")
+        print(f"OpenAI API error: {e}")
+        # Fallback to mock on any error
+        return f"Fallback summary: The OpenAI service encountered an issue, but this text contains {len(text)} characters and would normally be summarized to highlight the main points and key information."
 
 @app.get("/")
 async def health_check():
     """API health check"""
+    ai_status = "openai" if (client and OPENAI_AVAILABLE) else "mock"
     return {
         "message": "Hello, this API is to showcase AI-powered summarization!",
-        "ai_status": "OpenAI" if client else "Mock Mode",
+        "ai_status": ai_status,
+        "openai_available": OPENAI_AVAILABLE,
+        "api_key_configured": bool(openai_api_key),
         "status": "Ready"
     }
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "ai": "openai" if client else "mock"}
+    ai_mode = "openai" if (client and OPENAI_AVAILABLE) else "mock"
+    return {
+        "status": "healthy", 
+        "ai": ai_mode,
+        "openai_library": OPENAI_AVAILABLE,
+        "api_key": bool(openai_api_key)
+    }
 
 @app.post("/summarize", response_model=SummarizeResponse)
 async def summarize_endpoint(request: SummarizeRequest):
-    """Summarize text using OpenAI"""
+    """Summarize text using OpenAI or mock"""
     if not request.text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
     
@@ -88,11 +115,12 @@ async def summarize_endpoint(request: SummarizeRequest):
     
     try:
         summary = summarize_text(request.text, request.max_length)
+        source = "openai" if (client and OPENAI_AVAILABLE) else "mock"
         
         return SummarizeResponse(
             original_text=request.text,
             summary=summary,
-            summary_source="openai" if client else "mock"
+            summary_source=source
         )
     except HTTPException:
         raise
@@ -113,12 +141,13 @@ async def summarize_by_index(index: int):
         raise HTTPException(status_code=404, detail="Document not found")
     
     summary = summarize_text(SAMPLE_DOC)
+    source = "openai" if (client and OPENAI_AVAILABLE) else "mock"
     
     return {
         "document": SAMPLE_DOC,
         "generated_summary": summary,
         "ground_truth_summary": "Northern Ireland boss Michael O'Neill praised scorer Conor Washington as a 1-0 win over Slovenia set a new record of 10 games unbeaten.",
-        "summary_source": "openai" if client else "mock"
+        "summary_source": source
     }
 
 if __name__ == "__main__":
