@@ -150,6 +150,18 @@ async def summarize_by_index(index: int):
         "summary_source": source
     }
 
+@app.get("/debug")
+async def debug_env():
+    return {
+        "env_vars": {
+            "OPENAI_API_KEY_present": bool(os.getenv("OPENAI_API_KEY")),
+            "OPENAI_API_KEY_length": len(os.getenv("OPENAI_API_KEY", "")),
+            "OPENAI_API_KEY_prefix": os.getenv("OPENAI_API_KEY", "")[:15] if os.getenv("OPENAI_API_KEY") else None,
+            "PROJECT_ID": os.getenv("PROJECT_ID"),
+            "LOCATION": os.getenv("LOCATION")
+        }
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
