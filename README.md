@@ -2,7 +2,7 @@ AI Text Summarizer 🤖
 A production-ready AI-powered text summarization service built with FastAPI, OpenAI GPT, and deployed on Google Cloud Run with automated CI/CD.
 🚀 Live Demo
 
-Web App: [Your Streamlit URL]
+Web App: https://vertexai-summarization-kpqtxt7dijchuzpd3tba3t.streamlit.app/
 API Documentation: https://vertex-ai-summarizer-1055382643810.us-central1.run.app/docs
 Health Check: https://vertex-ai-summarizer-1055382643810.us-central1.run.app/health
 
