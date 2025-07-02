@@ -57,7 +57,7 @@ jobs:
           --max-instances 2 \
           --min-instances 0 \
           --platform managed \
-          --set-env-vars PROJECT_ID=${{ env.PROJECT_ID }},LOCATION=$REGION \
+          --set-env-vars PROJECT_ID=${{ env.PROJECT_ID }},LOCATION=$REGION,OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
           --timeout 900
 
         echo "Deployment completed successfully!"
