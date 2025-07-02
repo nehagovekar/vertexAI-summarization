@@ -18,7 +18,7 @@ try:
 except ImportError:
     print("Warning: dotenv not available, using environment variables directly")
 
-# Try to import OpenAI safely
+
 try:
     from openai import OpenAI
     OPENAI_AVAILABLE = True
@@ -37,26 +37,13 @@ if OPENAI_AVAILABLE and openai_api_key:
         client = OpenAI(api_key=openai_api_key)
         print(f"✅ OpenAI client created with key: {openai_api_key[:15]}...")
         
-        # Test the client with a simple request
-        test_response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": "Say 'test successful'"}],
-            max_tokens=10
-        )
-        print("✅ OpenAI client test successful")
+        # Don't test the client during initialization - just create it
+        print("✅ OpenAI client initialization complete")
         
     except Exception as e:
-        print(f"❌ OpenAI client initialization/test failed: {type(e).__name__}: {e}")
+        print(f"❌ OpenAI client initialization failed: {type(e).__name__}: {e}")
         initialization_error = str(e)
         client = None
-else:
-    if not OPENAI_AVAILABLE:
-        print("⚠️ OpenAI library not available")
-        initialization_error = "OpenAI library not available"
-    else:
-        print(f"⚠️ OpenAI API key not found. Key present: {bool(openai_api_key)}")
-        initialization_error = "API key not found"
-    client = None
 
 app = FastAPI(title="AI Summarizer", version="1.0.0")
 
