@@ -11,6 +11,7 @@ st.set_page_config(
 )
 
 # Your API URL
+#API_URL = "http://localhost:8000"
 API_URL = "https://vertex-ai-summarizer-1055382643810.us-central1.run.app"
 
 # Title and description
