@@ -5,8 +5,7 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-import vertexai
-from vertexai.preview.generative_models import GenerativeModel  # FIXED IMPORT
+from openai import OpenAI
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -17,21 +16,15 @@ env_file = project_root / ".env"
 if env_file.exists():
     load_dotenv(env_file)
 
-# Initialize Vertex AI
-project_id = os.getenv("PROJECT_ID")
-location = os.getenv("LOCATION", "us-central1")
+# Initialize OpenAI client
+openai_api_key = os.getenv("OPENAI_API_KEY")
+if not openai_api_key:
+    print("Warning: OPENAI_API_KEY not found, using mock responses")
+    client = None
+else:
+    client = OpenAI(api_key=openai_api_key)
 
-if not project_id:
-    raise ValueError("PROJECT_ID environment variable is required")
-
-try:
-    vertexai.init(project=project_id, location=location)
-    print(f"✅ Vertex AI initialized successfully for project: {project_id}")
-except Exception as e:
-    print(f"❌ Vertex AI initialization failed: {e}")
-    raise
-
-app = FastAPI(title="Vertex AI Summarizer", version="1.0.0")
+app = FastAPI(title="AI Summarizer", version="1.0.0")
 
 class SummarizeRequest(BaseModel):
     text: str
@@ -43,22 +36,30 @@ class SummarizeResponse(BaseModel):
     summary_source: str = "generated"
 
 def summarize_text(text: str, max_length: int = 150) -> str:
-    """Use Vertex AI to summarize text"""
+    """Use OpenAI to summarize text"""
+    
+    # Fallback to mock if no API key
+    if not client:
+        return f"Mock summary: This text discusses various topics and contains {len(text)} characters. Key points would be extracted here in a real implementation."
+    
     try:
-        model = GenerativeModel("gemini-pro")  # Changed from gemini-2.5-flash
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",  # Cheap and fast
+            messages=[
+                {
+                    "role": "system", 
+                    "content": f"You are a helpful assistant that creates concise summaries. Summarize the following text in {max_length} words or less."
+                },
+                {
+                    "role": "user", 
+                    "content": text
+                }
+            ],
+            max_tokens=max_length * 2,  # Rough estimate
+            temperature=0.3
+        )
         
-        prompt = f"""
-        Please summarize the following text in {max_length} words or less. 
-        Focus on the key points and main ideas:
-        
-        Text: {text}
-        
-        Summary:
-        """
-        
-        response = model.generate_content(prompt)
-        
-        return response.text.strip()
+        return response.choices[0].message.content.strip()
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Summarization failed: {str(e)}")
@@ -67,19 +68,18 @@ def summarize_text(text: str, max_length: int = 150) -> str:
 async def health_check():
     """API health check"""
     return {
-        "message": "Hello, this API is to showcase Vertex AI based summarization!",
-        "project_id": project_id,
-        "location": location,
-        "status": "Vertex AI Ready"
+        "message": "Hello, this API is to showcase AI-powered summarization!",
+        "ai_status": "OpenAI" if client else "Mock Mode",
+        "status": "Ready"
     }
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "vertex_ai": "initialized"}
+    return {"status": "healthy", "ai": "openai" if client else "mock"}
 
 @app.post("/summarize", response_model=SummarizeResponse)
 async def summarize_endpoint(request: SummarizeRequest):
-    """Summarize text using Vertex AI"""
+    """Summarize text using OpenAI"""
     if not request.text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
     
@@ -92,7 +92,7 @@ async def summarize_endpoint(request: SummarizeRequest):
         return SummarizeResponse(
             original_text=request.text,
             summary=summary,
-            summary_source="generated"
+            summary_source="openai" if client else "mock"
         )
     except HTTPException:
         raise
@@ -118,7 +118,7 @@ async def summarize_by_index(index: int):
         "document": SAMPLE_DOC,
         "generated_summary": summary,
         "ground_truth_summary": "Northern Ireland boss Michael O'Neill praised scorer Conor Washington as a 1-0 win over Slovenia set a new record of 10 games unbeaten.",
-        "summary_source": "generated"
+        "summary_source": "openai" if client else "mock"
     }
 
 if __name__ == "__main__":
