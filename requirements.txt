@@ -1,5 +1,12 @@
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pydantic==2.5.0
-python-dotenv==1.0.0
-openai>=1.40.0
+# Core frontend and API interaction
+streamlit
+requests
+openai
+
+# FastAPI backend + clean version pinning for stability
+fastapi==0.95.2
+pydantic==1.10.13
+
+# Optional (for local dev only, safe to include)
+uvicorn==0.24.0
+python-dotenv
