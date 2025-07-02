@@ -22,22 +22,40 @@ except ImportError:
 try:
     from openai import OpenAI
     OPENAI_AVAILABLE = True
-except ImportError:
-    print("Warning: OpenAI library not available, using mock responses")
+    print("✅ OpenAI library imported successfully")
+except ImportError as e:
+    print(f"❌ OpenAI library import failed: {e}")
     OPENAI_AVAILABLE = False
     OpenAI = None
 
-# Initialize OpenAI client safely
+# Initialize OpenAI client with detailed debugging
 openai_api_key = os.getenv("OPENAI_API_KEY")
+initialization_error = None
+
 if OPENAI_AVAILABLE and openai_api_key:
     try:
         client = OpenAI(api_key=openai_api_key)
-        print("✅ OpenAI client initialized successfully")
+        print(f"✅ OpenAI client created with key: {openai_api_key[:15]}...")
+        
+        # Test the client with a simple request
+        test_response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": "Say 'test successful'"}],
+            max_tokens=10
+        )
+        print("✅ OpenAI client test successful")
+        
     except Exception as e:
-        print(f"❌ OpenAI client initialization failed: {e}")
+        print(f"❌ OpenAI client initialization/test failed: {type(e).__name__}: {e}")
+        initialization_error = str(e)
         client = None
 else:
-    print("⚠️ OpenAI API key not found, using mock responses")
+    if not OPENAI_AVAILABLE:
+        print("⚠️ OpenAI library not available")
+        initialization_error = "OpenAI library not available"
+    else:
+        print(f"⚠️ OpenAI API key not found. Key present: {bool(openai_api_key)}")
+        initialization_error = "API key not found"
     client = None
 
 app = FastAPI(title="AI Summarizer", version="1.0.0")
@@ -56,9 +74,11 @@ def summarize_text(text: str, max_length: int = 150) -> str:
     
     # Use mock if OpenAI not available
     if not client or not OPENAI_AVAILABLE:
+        print(f"Using mock response. Client: {bool(client)}, Available: {OPENAI_AVAILABLE}")
         return f"Mock summary: This text contains {len(text)} characters and discusses various topics. In a real implementation, AI would analyze the content and extract key points to create a meaningful summary of approximately {max_length} words."
     
     try:
+        print(f"Attempting OpenAI request for {len(text)} characters...")
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -75,12 +95,14 @@ def summarize_text(text: str, max_length: int = 150) -> str:
             temperature=0.3
         )
         
-        return response.choices[0].message.content.strip()
+        result = response.choices[0].message.content.strip()
+        print(f"✅ OpenAI request successful, got {len(result)} characters")
+        return result
         
     except Exception as e:
-        print(f"OpenAI API error: {e}")
+        print(f"❌ OpenAI API error: {type(e).__name__}: {e}")
         # Fallback to mock on any error
-        return f"Fallback summary: The OpenAI service encountered an issue, but this text contains {len(text)} characters and would normally be summarized to highlight the main points and key information."
+        return f"Fallback summary (OpenAI error: {type(e).__name__}): This text contains {len(text)} characters and would normally be summarized to highlight the main points and key information."
 
 @app.get("/")
 async def health_check():
@@ -91,6 +113,7 @@ async def health_check():
         "ai_status": ai_status,
         "openai_available": OPENAI_AVAILABLE,
         "api_key_configured": bool(openai_api_key),
+        "initialization_error": initialization_error,
         "status": "Ready"
     }
 
@@ -101,7 +124,26 @@ async def health():
         "status": "healthy", 
         "ai": ai_mode,
         "openai_library": OPENAI_AVAILABLE,
-        "api_key": bool(openai_api_key)
+        "api_key": bool(openai_api_key),
+        "client_ready": bool(client),
+        "init_error": initialization_error
+    }
+
+@app.get("/debug")
+async def debug_env():
+    return {
+        "env_vars": {
+            "OPENAI_API_KEY_present": bool(openai_api_key),
+            "OPENAI_API_KEY_length": len(openai_api_key) if openai_api_key else 0,
+            "OPENAI_API_KEY_prefix": openai_api_key[:15] if openai_api_key else None,
+            "PROJECT_ID": os.getenv("PROJECT_ID"),
+            "LOCATION": os.getenv("LOCATION")
+        },
+        "openai_status": {
+            "library_available": OPENAI_AVAILABLE,
+            "client_initialized": bool(client),
+            "initialization_error": initialization_error
+        }
     }
 
 @app.post("/summarize", response_model=SummarizeResponse)
@@ -150,18 +192,6 @@ async def summarize_by_index(index: int):
         "summary_source": source
     }
 
-@app.get("/debug")
-async def debug_env():
-    return {
-        "env_vars": {
-            "OPENAI_API_KEY_present": bool(os.getenv("OPENAI_API_KEY")),
-            "OPENAI_API_KEY_length": len(os.getenv("OPENAI_API_KEY", "")),
-            "OPENAI_API_KEY_prefix": os.getenv("OPENAI_API_KEY", "")[:15] if os.getenv("OPENAI_API_KEY") else None,
-            "PROJECT_ID": os.getenv("PROJECT_ID"),
-            "LOCATION": os.getenv("LOCATION")
-        }
-    }
-
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000) 
