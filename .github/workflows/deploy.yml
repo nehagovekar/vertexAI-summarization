@@ -68,6 +68,18 @@ jobs:
 
         echo "Deployment completed successfully!"
 
+    - name: Deploy Streamlit to Cloud Run
+      run: |
+        gcloud run deploy streamlit-app \
+          --source . \
+          --dockerfile streamlit.Dockerfile \
+          --region us-central1 \
+          --allow-unauthenticated \
+          --port 8501 \
+          --memory 1Gi \
+          --cpu 
+      
+
     - name: Set IAM Policy
       env:
         SERVICE_NAME: vertex-ai-summarizer
