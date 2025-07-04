@@ -63,24 +63,23 @@ jobs:
         echo "Deployment completed successfully!"
 
     - name: Build and Deploy Streamlit to Cloud Run
-    run: |
-      # Build the Streamlit image
-      docker build -f streamlit.Dockerfile -t gcr.io/$PROJECT_ID/streamlit-app:latest .
-      docker tag gcr.io/$PROJECT_ID/streamlit-app:latest gcr.io/$PROJECT_ID/streamlit-app:$GITHUB_SHA
-      
-      # Push the image
-      docker push gcr.io/$PROJECT_ID/streamlit-app:latest
-      docker push gcr.io/$PROJECT_ID/streamlit-app:$GITHUB_SHA
-      
-      # Deploy to Cloud Run
-      gcloud run deploy streamlit-app \
-        --image gcr.io/$PROJECT_ID/streamlit-app:$GITHUB_SHA \
-        --region us-central1 \
-        --allow-unauthenticated \
-        --port 8501 \
-        --memory 1Gi \
-        --cpu 1
-      
+      run: |
+        # Build the Streamlit image
+        docker build -f streamlit.Dockerfile -t gcr.io/$PROJECT_ID/streamlit-app:latest .
+        docker tag gcr.io/$PROJECT_ID/streamlit-app:latest gcr.io/$PROJECT_ID/streamlit-app:$GITHUB_SHA
+        
+        # Push the image
+        docker push gcr.io/$PROJECT_ID/streamlit-app:latest
+        docker push gcr.io/$PROJECT_ID/streamlit-app:$GITHUB_SHA
+        
+        # Deploy to Cloud Run
+        gcloud run deploy streamlit-app \
+          --image gcr.io/$PROJECT_ID/streamlit-app:$GITHUB_SHA \
+          --region us-central1 \
+          --allow-unauthenticated \
+          --port 8501 \
+          --memory 1Gi \
+          --cpu 1
 
     - name: Set IAM Policy
       env:
@@ -92,7 +91,6 @@ jobs:
           --member=allUsers \
           --role=roles/run.invoker \
           $SERVICE_NAME
-
 
     - name: Print Success Message
       run: |
