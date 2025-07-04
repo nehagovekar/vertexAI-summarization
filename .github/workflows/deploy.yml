@@ -38,12 +38,6 @@ jobs:
         docker push gcr.io/$PROJECT_ID/vertex-ai-summarizer:latest
         docker push gcr.io/$PROJECT_ID/vertex-ai-summarizer:$GITHUB_SHA
 
-    - name: Debug Secrets
-      run: |
-        echo "PROJECT_ID: ${{ env.PROJECT_ID }}"
-        echo "OPENAI_API_KEY exists: ${{ secrets.OPENAI_API_KEY != '' }}"
-        echo "Key length: $(echo '${{ secrets.OPENAI_API_KEY }}' | wc -c)"
-
     - name: Deploy to Cloud Run
       env:
         SERVICE_NAME: vertex-ai-summarizer
@@ -77,7 +71,9 @@ jobs:
           --allow-unauthenticated \
           --port 8501 \
           --memory 1Gi \
-          --cpu 
+          --cpu 1
+
+          
       
 
     - name: Set IAM Policy
