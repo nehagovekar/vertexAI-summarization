@@ -62,18 +62,24 @@ jobs:
 
         echo "Deployment completed successfully!"
 
-    - name: Deploy Streamlit to Cloud Run
-      run: |
-        gcloud run deploy streamlit-app \
-          --source . \
-          --dockerfile streamlit.Dockerfile \
-          --region us-central1 \
-          --allow-unauthenticated \
-          --port 8501 \
-          --memory 1Gi \
-          --cpu 1
-
-          
+    - name: Build and Deploy Streamlit to Cloud Run
+    run: |
+      # Build the Streamlit image
+      docker build -f streamlit.Dockerfile -t gcr.io/$PROJECT_ID/streamlit-app:latest .
+      docker tag gcr.io/$PROJECT_ID/streamlit-app:latest gcr.io/$PROJECT_ID/streamlit-app:$GITHUB_SHA
+      
+      # Push the image
+      docker push gcr.io/$PROJECT_ID/streamlit-app:latest
+      docker push gcr.io/$PROJECT_ID/streamlit-app:$GITHUB_SHA
+      
+      # Deploy to Cloud Run
+      gcloud run deploy streamlit-app \
+        --image gcr.io/$PROJECT_ID/streamlit-app:$GITHUB_SHA \
+        --region us-central1 \
+        --allow-unauthenticated \
+        --port 8501 \
+        --memory 1Gi \
+        --cpu 1
       
 
     - name: Set IAM Policy
