@@ -22,9 +22,9 @@ except ImportError:
 try:
     from openai import OpenAI
     OPENAI_AVAILABLE = True
-    print("✅ OpenAI library imported successfully")
+    print(" OpenAI library imported successfully")
 except ImportError as e:
-    print(f"❌ OpenAI library import failed: {e}")
+    print(f" OpenAI library import failed: {e}")
     OPENAI_AVAILABLE = False
     OpenAI = None
 
@@ -35,13 +35,13 @@ initialization_error = None
 if OPENAI_AVAILABLE and openai_api_key:
     try:
         client = OpenAI(api_key=openai_api_key)
-        print(f"✅ OpenAI client created with key: {openai_api_key[:15]}...")
+        print(f" OpenAI client created with key: {openai_api_key[:15]}...")
         
         # Don't test the client during initialization - just create it
-        print("✅ OpenAI client initialization complete")
+        print(" OpenAI client initialization complete")
         
     except Exception as e:
-        print(f"❌ OpenAI client initialization failed: {type(e).__name__}: {e}")
+        print(f" OpenAI client initialization failed: {type(e).__name__}: {e}")
         initialization_error = str(e)
         client = None
 
@@ -83,11 +83,11 @@ def summarize_text(text: str, max_length: int = 150) -> str:
         )
         
         result = response.choices[0].message.content.strip()
-        print(f"✅ OpenAI request successful, got {len(result)} characters")
+        print(f"OpenAI request successful, got {len(result)} characters")
         return result
         
     except Exception as e:
-        print(f"❌ OpenAI API error: {type(e).__name__}: {e}")
+        print(f" OpenAI API error: {type(e).__name__}: {e}")
         # Fallback to mock on any error
         return f"Fallback summary (OpenAI error: {type(e).__name__}): This text contains {len(text)} characters and would normally be summarized to highlight the main points and key information."
 
@@ -181,4 +181,5 @@ async def summarize_by_index(index: int):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    uvicorn.run(app, host="0.0.0.0", port=8000)  
+     
