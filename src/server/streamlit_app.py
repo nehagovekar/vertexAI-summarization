@@ -36,12 +36,12 @@ with st.sidebar:
             response = requests.get(f"{API_URL}/health", timeout=10)
             if response.status_code == 200:
                 data = response.json()
-                st.success(f"✅ API is online!")
+                st.success(f" API is online!")
                 st.info(f"AI Mode: {data.get('ai', 'unknown')}")
             else:
-                st.error("❌ API is having issues")
+                st.error(" API is having issues")
         except Exception as e:
-            st.error(f"❌ Cannot reach API: {str(e)}")
+            st.error(f" Cannot reach API: {str(e)}")
 
 # Main interface
 col1, col2 = st.columns([1, 1])
@@ -86,9 +86,9 @@ with col1:
         char_count = len(user_text)
         word_count = len(user_text.split())
         if char_count < 50:
-            st.warning(f"⚠️ Text is too short ({char_count} characters). Need at least 50 characters.")
+            st.warning(f" Text is too short ({char_count} characters). Need at least 50 characters.")
         else:
-            st.info(f"✅ Ready to summarize ({char_count} characters, ~{word_count} words)")
+            st.info(f" Ready to summarize ({char_count} characters, ~{word_count} words)")
 
 with col2:
     st.header("🎯 AI Summary")
@@ -96,12 +96,12 @@ with col2:
     # Summarize button
     if st.button("✨ Generate Summary", type="primary", use_container_width=True):
         if not user_text:
-            st.error("❌ Please enter some text to summarize!")
+            st.error(" Please enter some text to summarize!")
         elif len(user_text.strip()) < 50:
-            st.error("❌ Text is too short! Please enter at least 50 characters.")
+            st.error(" Text is too short! Please enter at least 50 characters.")
         else:
             # Show loading spinner
-            with st.spinner("🤖 AI is analyzing your text..."):
+            with st.spinner(" AI is analyzing your text..."):
                 try:
                     # Make API call
                     payload = {
@@ -136,7 +136,7 @@ with col2:
                             st.metric("Compressed", f"{compression_ratio:.1f}%")
                         
                         # Summary result
-                        st.success("✅ Summary generated successfully!")
+                        st.success(" Summary generated successfully!")
                         st.markdown("### 📄 AI Summary:")
                         
                         # Display summary in a nice box
@@ -157,9 +157,9 @@ with col2:
                         # Additional info
                         ai_source = result.get('summary_source', 'unknown')
                         if ai_source == 'openai':
-                            st.info("🚀 Powered by OpenAI GPT")
+                            st.info(" Powered by OpenAI GPT")
                         elif ai_source == 'mock':
-                            st.warning("⚠️ Demo mode - using mock responses")
+                            st.warning(" Demo mode - using mock responses")
                         else:
                             st.info(f"🔧 Source: {ai_source}")
                         
@@ -190,36 +190,36 @@ Generated: {st.session_state.get('timestamp', 'Unknown')}
                         
                     else:
                         error_detail = response.json().get("detail", "Unknown error")
-                        st.error(f"❌ API Error: {error_detail}")
+                        st.error(f" API Error: {error_detail}")
                         
                 except requests.exceptions.Timeout:
-                    st.error("⏰ Request timed out. The text might be too long or the API is busy.")
+                    st.error(" Request timed out. The text might be too long or the API is busy.")
                 except requests.exceptions.ConnectionError:
-                    st.error("🔌 Cannot connect to the API. Please check if the service is running.")
+                    st.error("Cannot connect to the API. Please check if the service is running.")
                 except Exception as e:
-                    st.error(f"💥 Unexpected error: {str(e)}")
+                    st.error(f" Unexpected error: {str(e)}")
 
 # Footer section
 st.markdown("---")
 col_footer1, col_footer2, col_footer3 = st.columns(3)
 
 with col_footer1:
-    st.markdown("### 🚀 Quick Actions")
-    if st.button("🔄 Clear All"):
+    st.markdown("###  Quick Actions")
+    if st.button("Clear All"):
         st.rerun()
 
 with col_footer2:
-    st.markdown("### 📊 API Resources")
+    st.markdown("###  API Resources")
     st.markdown(f"[View API Documentation]({API_URL}/docs)")
     st.markdown(f"[Health Check]({API_URL}/health)")
 
 with col_footer3:
-    st.markdown("### ℹ️ About")
+    st.markdown("### ℹ About")
     st.markdown("Built with FastAPI + OpenAI + Streamlit")
     st.markdown("Deployed on Google Cloud Run")
 
 # Usage instructions in expandable section
-with st.expander("📖 How to Use This App"):
+with st.expander(" How to Use This App"):
     st.markdown("""
     ### 🎯 Getting Started
     1. **Choose Input Method**: Select how you want to provide text
